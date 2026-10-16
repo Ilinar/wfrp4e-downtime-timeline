@@ -1,0 +1,206 @@
+<div class="wdt-root">
+<div class="wdt-toolbar">
+    <div class="wdt-nav">
+        <button type="button" class="wdt-arrow" data-action="prevWeek" title="{{localize 'WDT.Nav.PrevWeek'}}"><i class="fa-solid fa-chevron-left"></i></button>
+        <button type="button" class="wdt-btn" data-action="gotoToday"><i class="fa-solid fa-location-crosshairs"></i> {{localize "WDT.Today"}}</button>
+        <button type="button" class="wdt-arrow" data-action="nextWeek" title="{{localize 'WDT.Nav.NextWeek'}}"><i class="fa-solid fa-chevron-right"></i></button>
+        <span class="wdt-current">{{currentLabel}}</span>
+    </div>
+    <div class="wdt-toolbar-center">
+        {{#if planMode}}
+        <button type="button" class="wdt-btn wdt-plan-run" data-action="runPlan"><i class="fa-solid fa-check"></i> {{localize "WDT.Plan.Run"}}</button>
+        {{/if}}
+    </div>
+    <div class="wdt-modes">
+        {{#if hiddenTotal}}
+        <button type="button" class="wdt-btn {{#if showHidden}}wdt-active{{/if}}" data-action="toggleShowHidden" title="{{localize 'WDT.Hide.ToggleHint'}}"><i class="fa-solid {{#if showHidden}}fa-eye{{else}}fa-eye-slash{{/if}}"></i> {{localize "WDT.Hide.Toggle" n=hiddenTotal}}</button>
+        {{/if}}
+        <button type="button" class="wdt-btn {{#if planMode}}wdt-active{{/if}}" data-action="togglePlan" title="{{localize 'WDT.Plan.Hint'}}"><i class="fa-solid fa-layer-group"></i> {{localize "WDT.Plan.Toggle"}}</button>
+        {{#if isGM}}
+        <button type="button" class="wdt-btn {{#if modMode}}wdt-active{{/if}}" data-action="toggleMod" title="{{localize 'WDT.Mod.Hint'}}"><i class="fa-solid fa-percent"></i> {{localize "WDT.Mod.Toggle"}} <span class="wdt-gm-badge">{{localize "WDT.GM"}}</span></button>
+        {{/if}}
+        {{#unless hasSC}}
+        <span class="wdt-warn" title="{{localize 'WDT.NoSC'}}"><i class="fa-solid fa-triangle-exclamation"></i> {{localize "WDT.NoSCShort"}}</span>
+        {{/unless}}
+    </div>
+</div>
+
+{{#if planMode}}
+<div class="wdt-planbar">
+    <div class="wdt-plan-group">
+        <label>{{localize "WDT.Plan.Type"}}</label>
+        <div class="wdt-plan-types">
+            {{#each planTypes as |ty|}}
+            <button type="button" class="wdt-btn {{#if ty.active}}wdt-active{{/if}}" data-action="setPlanType" data-type="{{ty.value}}">{{ty.label}}</button>
+            {{/each}}
+        </div>
+    </div>
+    <div class="wdt-plan-sep"></div>
+    <div class="wdt-plan-group">
+        <button type="button" class="wdt-btn {{#if weekMode}}wdt-active{{/if}}" data-action="toggleWeekMode"><i class="fa-solid {{#if weekMode}}fa-square-check{{else}}fa-square{{/if}}"></i> {{localize "WDT.Plan.SelectWeek"}}</button>
+        <button type="button" class="wdt-btn wdt-plan-clear" data-action="clearPlan"><i class="fa-solid fa-eraser"></i> {{localize "WDT.Plan.Clear"}}</button>
+    </div>
+    <div class="wdt-plan-spacer"></div>
+    <button type="button" class="wdt-btn wdt-plan-cleardays" data-action="clearDays"><i class="fa-solid fa-trash"></i> {{localize "WDT.Plan.ClearDays"}}</button>
+</div>
+{{/if}}
+
+{{#if modMode}}
+<div class="wdt-modbar">
+    <div class="wdt-plan-group">
+        <label>{{localize "WDT.Mod.Factor"}}</label>
+        <button type="button" class="wdt-btn wdt-mod-step" data-action="modFactorStep" data-delta="-0.5" title="−0,5">−</button>
+        <input type="number" name="wdt-mod-factor" value="{{modFactor}}" min="0" step="0.5" />
+        <button type="button" class="wdt-btn wdt-mod-step" data-action="modFactorStep" data-delta="0.5" title="+0,5">+</button>
+    </div>
+    <div class="wdt-plan-sep"></div>
+    <div class="wdt-plan-group">
+        <label>{{localize "WDT.Mod.Note"}}</label>
+        <input type="text" name="wdt-mod-note" value="{{modNote}}" />
+    </div>
+    <div class="wdt-plan-spacer"></div>
+    <button type="button" class="wdt-btn wdt-plan-run" data-action="applyMod"><i class="fa-solid fa-check"></i> {{localize "WDT.Mod.Apply"}}</button>
+</div>
+{{/if}}
+
+{{#if hasRows}}
+<div class="wdt-body">
+    <div class="wdt-arrows wdt-arrows-left">
+        <button type="button" class="wdt-arrow" data-action="prevWeek" title="{{localize 'WDT.Nav.PrevWeek'}}"><i class="fa-solid fa-chevron-left"></i></button>
+    </div>
+
+    <div class="wdt-grid-scroll">
+    <div class="wdt-grid" style="grid-template-columns: 172px repeat({{daysCount}}, minmax(0, 1fr));">
+
+        {{! --- wiersz nagłówka dni --- }}
+        <div class="wdt-corner">{{localize "WDT.Grid.Character"}}</div>
+        {{#each days as |day|}}
+        <div class="wdt-day-head {{#if day.isToday}}wdt-today{{/if}} {{#if @root.modMode}}wdt-paintable{{/if}} {{#if day.modSelected}}wdt-selected{{/if}}"
+            data-day-index="{{day.dayIndex}}" title="{{day.full}}">
+            <span class="wdt-day-num">{{day.num}}</span>
+            <span class="wdt-day-sub">{{day.sub}}</span>
+            {{#if day.notes.length}}<span class="wdt-day-star" title="{{day.notes.[0].title}}"><i class="fa-solid fa-star"></i></span>{{/if}}
+            {{#if day.modFactor}}<span class="wdt-day-mod" title="{{day.modTitle}}">×{{day.modFactor}}</span>{{/if}}
+            {{#if day.isWorkday}}<span class="wdt-day-work" title="{{localize 'WDT.Mod.Workday'}}">⚒</span>{{/if}}
+        </div>
+        {{/each}}
+
+        {{! --- grupy (foldery aktorów) i wiersze postaci --- }}
+        {{#each groups as |grp|}}
+        {{#if @root.showGroups}}
+        <div class="wdt-group-head {{#if grp.collapsed}}wdt-collapsed{{/if}}" data-action="toggleGroup" data-group="{{grp.key}}" title="{{localize 'WDT.Group.Toggle'}}"
+            {{#if grp.color}}style="--wdt-group-color: {{grp.color}};"{{/if}}>
+            <i class="fa-solid {{#if grp.collapsed}}fa-chevron-right{{else}}fa-chevron-down{{/if}} wdt-group-chevron"></i>
+            <i class="fa-solid {{#if grp.collapsed}}fa-folder{{else}}fa-folder-open{{/if}} wdt-group-icon"></i>
+            <span class="wdt-group-name">{{grp.name}}</span>
+            <span class="wdt-group-count">({{grp.count}})</span>
+            {{#if grp.hiddenCount}}<span class="wdt-group-hidden"><i class="fa-solid fa-eye-slash"></i> {{localize "WDT.Group.HiddenCount" n=grp.hiddenCount}}</span>{{/if}}
+        </div>
+        {{/if}}
+        {{#unless grp.collapsed}}
+        {{#each grp.rows as |row|}}
+        <div class="wdt-actor-cell {{#if row.hidden}}wdt-row-hidden{{/if}}" data-action="toggleActor" data-actor-id="{{row.actorId}}">
+            <img class="wdt-actor-img" src="{{row.img}}" alt="" data-action="openSheet" data-actor-id="{{row.actorId}}" title="{{localize 'WDT.OpenSheet'}}" />
+            <button type="button" class="wdt-actor-hide" data-action="toggleHidden" data-actor-id="{{row.actorId}}"
+                title="{{#if row.hidden}}{{localize 'WDT.Hide.Show'}}{{else}}{{localize 'WDT.Hide.Hide'}}{{/if}}"><i class="fa-solid {{#if row.hidden}}fa-eye{{else}}fa-eye-slash{{/if}}"></i></button>
+            <div class="wdt-actor-meta">
+                <span class="wdt-actor-name" title="{{row.actorName}}">{{row.actorName}}</span>
+                <span class="wdt-actor-status {{#if row.status.up}}wdt-standing-up{{/if}}{{#if row.status.down}}wdt-standing-down{{/if}}">
+                    <span class="wdt-status-label" {{#if row.canEdit}}data-actor-id="{{row.actorId}}"{{/if}} title="{{localize 'WDT.Standing.Tooltip'}}">{{localize "WDT.Standing.Label"}}:</span>
+                    {{#if row.canEdit}}
+                    <input class="wdt-status-input" data-actor-id="{{row.actorId}}" type="text" value="{{row.status.full}}" />
+                    {{else}}
+                    <span class="wdt-status-tier">{{row.status.full}}</span>
+                    {{/if}}
+                    <span class="wdt-status-adorn">
+                        {{#if row.status.up}}<i class="fa-solid fa-arrow-up wdt-status-arrow"></i>{{/if}}
+                        {{#if row.status.down}}<i class="fa-solid fa-arrow-down wdt-status-arrow"></i>{{/if}}
+                        {{#if row.canEdit}}{{#if row.status.changed}}<button type="button" class="wdt-status-reset" data-action="resetStanding" data-actor-id="{{row.actorId}}" title="{{localize 'WDT.Standing.Reset'}}"><i class="fa-solid fa-rotate-left"></i></button>{{/if}}{{/if}}
+                    </span>
+                </span>
+            </div>
+        </div>
+
+        {{#each row.cells as |cell|}}
+        {{#unless cell.hidden}}
+        <div class="wdt-cell {{#if cell.isToday}}wdt-today{{/if}} {{#if cell.selected}}wdt-selected{{/if}} {{#if row.expanded}}wdt-expanded{{/if}} {{#if row.hidden}}wdt-row-hidden{{/if}} {{#if cell.span}}wdt-merged{{/if}} {{#if @root.planMode}}{{#if cell.canEdit}}wdt-paintable{{/if}}{{/if}}"
+            data-action="toggleActor" data-actor-id="{{row.actorId}}" data-day-index="{{cell.dayIndex}}"
+            {{#if cell.span}}style="grid-column: span {{cell.span}};"{{/if}}>
+
+            {{#if cell.showQuick}}
+            <div class="wdt-cell-actions">
+                <button type="button" class="wdt-q wdt-q-test" data-action="quickTest" data-actor-id="{{row.actorId}}" data-ts="{{cell.timestamp}}" title="{{localize 'WDT.Quick.Test'}}"><i class="fa-solid fa-dice-d20"></i></button>
+                <button type="button" class="wdt-q wdt-q-ext" data-action="quickExtended" data-actor-id="{{row.actorId}}" data-ts="{{cell.timestamp}}" title="{{localize 'WDT.Quick.Extended'}}"><i class="fa-solid fa-hourglass-half"></i></button>
+                <button type="button" class="wdt-q wdt-q-income" data-action="quickIncome" data-actor-id="{{row.actorId}}" data-ts="{{cell.timestamp}}" title="{{localize 'WDT.Quick.Income'}}"><i class="fa-solid fa-coins"></i></button>
+                <button type="button" class="wdt-q wdt-q-adv" data-action="quickAdventure" data-actor-id="{{row.actorId}}" data-ts="{{cell.timestamp}}" title="{{localize 'WDT.Quick.Adventure'}}"><i class="fa-solid fa-person-hiking"></i></button>
+                <button type="button" class="wdt-q wdt-q-heal" data-action="quickHealing" data-actor-id="{{row.actorId}}" data-ts="{{cell.timestamp}}" title="{{localize 'WDT.Quick.Healing'}}"><i class="fa-solid fa-staff-snake"></i></button>
+                <button type="button" class="wdt-q wdt-q-rest" data-action="quickRest" data-actor-id="{{row.actorId}}" data-ts="{{cell.timestamp}}" title="{{localize 'WDT.Quick.Rest'}}"><i class="fa-solid fa-bed"></i></button>
+            </div>
+            {{/if}}
+
+            {{! --- czynności realizujące dzień (kompaktowo; szczegóły po rozwinięciu) --- }}
+            {{#each cell.activities as |act|}}
+            <div class="wdt-card wdt-type-{{act.type}} {{#if act.missing}}wdt-missing{{/if}}">
+                <div class="wdt-card-head">
+                    <i class="fa-solid {{act.icon}}"></i>
+                    <span class="wdt-card-name">{{act.name}}{{#if cell.mergeRange}} {{cell.mergeRange}}{{/if}}</span>
+                </div>
+                {{#if row.expanded}}
+                {{#if act.resultExpanded}}<div class="wdt-card-res">{{act.resultExpanded}}</div>{{/if}}
+                {{#if act.detail}}<div class="wdt-card-detail">{{act.detail}}</div>{{/if}}
+                {{#if act.showSlBar}}
+                <div class="wdt-sl">
+                    <div class="wdt-sl-bar"><span style="width: {{act.slPct}}%"></span></div>
+                    <span class="wdt-sl-text">{{act.SL.current}} / {{act.SL.target}} {{localize "WDT.SL"}}</span>
+                </div>
+                {{/if}}
+                {{#if cell.canEdit}}
+                {{#if act.hasNote}}<button type="button" class="wdt-card-edit" data-action="editNote" data-actor-id="{{row.actorId}}" data-activity-id="{{act.id}}" title="{{localize 'WDT.EditNote'}}"><i class="fa-solid fa-pen"></i></button>{{/if}}
+                <button type="button" class="wdt-card-del" data-action="deleteActivity" data-actor-id="{{row.actorId}}" data-activity-id="{{act.id}}" title="{{localize 'WDT.Clear'}}"><i class="fa-solid fa-xmark"></i></button>
+                {{/if}}
+                {{else}}
+                {{#if act.result}}<div class="wdt-card-res">{{act.result}}</div>{{/if}}
+                {{/if}}
+            </div>
+            {{/each}}
+
+            {{#if row.expanded}}
+            {{! --- koszt utrzymania (tylko w szczegółach, po zapłacie) --- }}
+            {{#if cell.cost}}
+            <div class="wdt-cost-chip" title="{{cell.costTitle}}"><i class="fa-solid fa-coins"></i> <span>{{cell.cost}}</span></div>
+            {{/if}}
+
+            {{! --- odpoczynek (tylko w szczegółach) --- }}
+            {{#if cell.rest.length}}
+            <div class="wdt-rest">
+                {{#each cell.rest as |r|}}
+                <div class="wdt-rest-chip" title="{{localize 'WDT.Type.rest'}}">
+                    <i class="fa-solid fa-bed"></i>
+                    <span class="wdt-rest-res">{{r.resultExpanded}}</span>
+                    {{#if cell.canEdit}}
+                    <button type="button" class="wdt-rest-del" data-action="deleteActivity" data-actor-id="{{row.actorId}}" data-activity-id="{{r.id}}" title="{{localize 'WDT.Clear'}}"><i class="fa-solid fa-xmark"></i></button>
+                    {{/if}}
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+            {{/if}}
+        </div>
+        {{/unless}}
+        {{/each}}
+        {{/each}}
+        {{/unless}}
+        {{/each}}
+
+    </div>
+    {{#if allHidden}}<div class="wdt-empty-state wdt-all-hidden">{{localize "WDT.AllHidden"}}</div>{{/if}}
+    </div>
+
+    <div class="wdt-arrows wdt-arrows-right">
+        <button type="button" class="wdt-arrow" data-action="nextWeek" title="{{localize 'WDT.Nav.NextWeek'}}"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+</div>
+{{else}}
+<div class="wdt-empty-state">{{localize "WDT.NoPlayers"}}</div>
+{{/if}}
+</div>

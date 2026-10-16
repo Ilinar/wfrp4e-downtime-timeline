@@ -1,0 +1,446 @@
+/* WFRP4e Downtime Timeline — siatka gracze × dni (motyw ciemny / parchment) */
+
+.wdt-timeline-app {
+  --wdt-bg: #241c16;          /* opaque tło dla elementów sticky */
+  --wdt-panel: rgba(0, 0, 0, 0.22);
+  --wdt-line: rgba(255, 255, 255, 0.14);
+  --wdt-text: #e9e0cf;
+  --wdt-dim: #b8ab92;
+  --wdt-red: #7a2a1e;
+  --wdt-red-acc: #c0392b;
+  --wdt-green: #5b8a3a;
+  --wdt-gold: #d4af37;
+}
+
+.wdt-timeline-app .window-content {
+  padding: 0;
+  overflow: hidden;
+  color: var(--wdt-text);
+}
+.wdt-root {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Pasek narzędzi — dwie strefy: nawigacja (lewo) | tryby (prawo) */
+.wdt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--wdt-line);
+}
+.wdt-toolbar .wdt-nav { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
+.wdt-toolbar .wdt-modes { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
+.wdt-toolbar .wdt-toolbar-center { flex: 1 1 auto; display: flex; justify-content: center; } /* „Wykonaj plan" na środku */
+.wdt-toolbar .wdt-arrow { flex: 0 0 auto; width: 26px; height: 24px; font-size: 13px; } /* kompaktowe, nie rozciągają się */
+.wdt-nav .wdt-current { margin-left: 6px; }
+.wdt-btn { width: auto; line-height: 1.4; padding: 2px 10px; }
+.wdt-btn.wdt-active { background: rgba(192, 57, 43, 0.35); border-color: var(--wdt-red-acc); }
+.wdt-current { font-weight: bold; font-size: var(--font-size-15, 15px); color: var(--wdt-text); }
+.wdt-warn { color: #e0a23a; font-size: var(--font-size-12, 12px); }
+/* „MG" przy przycisku Modyfikatory */
+.wdt-gm-badge { font-size: 9px; font-weight: bold; color: var(--wdt-gold); border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 3px; padding: 0 3px; margin-left: 3px; vertical-align: middle; }
+
+/* Pasek trybu planowania */
+.wdt-planbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 4px 6px;
+  background: rgba(192, 57, 43, 0.10);
+  border: 1px solid rgba(192, 57, 43, 0.4);
+  border-radius: 6px;
+}
+.wdt-planbar label { font-weight: bold; }
+.wdt-plan-types { display: flex; flex-wrap: wrap; gap: 4px; }
+.wdt-plan-types .wdt-btn { padding: 2px 8px; font-size: var(--font-size-12, 12px); }
+.wdt-planbar .wdt-plan-ailments { display: flex; align-items: center; gap: 4px; }
+.wdt-planbar .wdt-plan-upkeep { display: flex; align-items: center; gap: 4px; }
+.wdt-planbar input[type="number"] { width: 56px; }
+
+/* Sekcje pasków (planowanie/modyfikatory): grupy, separator, spacer */
+.wdt-plan-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.wdt-plan-sep { width: 1px; align-self: stretch; min-height: 20px; background: var(--wdt-line); margin: 0 2px; }
+.wdt-plan-spacer { flex: 1 1 auto; }
+.wdt-plan-hint { margin-left: auto; font-size: var(--font-size-11, 11px); color: var(--wdt-dim); }
+
+/* Akcje planu — wyróżnione od przycisków wyboru typu */
+.wdt-plan-run { background: rgba(91, 138, 58, 0.45); border-color: var(--wdt-green); font-weight: 600; }
+.wdt-plan-run:hover { background: rgba(91, 138, 58, 0.65); }
+.wdt-plan-clear { background: rgba(192, 57, 43, 0.30); border-color: var(--wdt-red-acc); }
+.wdt-plan-clear:hover { background: rgba(192, 57, 43, 0.5); }
+
+/* Ciało: strzałki | przewijana siatka | strzałki */
+.wdt-body {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+  gap: 4px;
+}
+.wdt-arrows {
+  flex: 0 0 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.wdt-arrow {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--wdt-line);
+  border-radius: 6px;
+  color: var(--wdt-text);
+  cursor: pointer;
+  font-size: 14px;
+}
+.wdt-arrow:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* Kontener: bez poziomego suwaka (kolumny wypełniają szerokość); pionowy w razie potrzeby */
+.wdt-grid-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Siatka: 1 kolumna postaci + N kolumn dni (grid-template-columns ustawiany inline) */
+.wdt-grid {
+  display: grid;
+  gap: 6px;
+  align-items: start;
+}
+
+/* Nagłówki dni (sticky u góry, opaque, stała wysokość — bez zawijania) */
+.wdt-day-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 46px;
+  box-sizing: border-box;
+  background: var(--wdt-bg);
+  border-bottom: 2px solid var(--wdt-line);
+  border-radius: 4px 4px 0 0;
+  padding: 2px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.wdt-day-head.wdt-today {
+  border-bottom-color: var(--wdt-red-acc);
+  background: linear-gradient(var(--wdt-bg), rgba(192, 57, 43, 0.18));
+}
+.wdt-day-num { font-size: 18px; font-weight: bold; line-height: 1; color: var(--wdt-text); }
+.wdt-day-sub {
+  font-size: 10px; color: var(--wdt-dim);
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wdt-day-star { position: absolute; top: 3px; right: 5px; color: var(--wdt-gold); font-size: 9px; }
+
+/* Narożnik (sticky w obu osiach) i kolumna postaci (sticky z lewej) */
+.wdt-corner {
+  position: sticky;
+  top: 0; left: 0;
+  z-index: 4;
+  background: var(--wdt-bg);
+  border-bottom: 2px solid var(--wdt-line);
+  border-right: 2px solid var(--wdt-line);
+  font-weight: bold;
+  color: var(--wdt-dim);
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+}
+.wdt-actor-cell {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--wdt-bg);
+  border-right: 2px solid var(--wdt-line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+}
+.wdt-actor-img {
+  width: 36px; height: 36px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border: 1px solid var(--wdt-line);
+  border-radius: 4px;
+}
+.wdt-actor-meta { display: flex; flex-direction: column; min-width: 0; }
+.wdt-actor-name {
+  font-weight: bold; color: var(--wdt-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Komórka dnia danej postaci */
+.wdt-cell {
+  min-height: 46px;
+  background: var(--wdt-panel);
+  border: 1px solid var(--wdt-line);
+  border-radius: 6px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wdt-cell.wdt-today { background: rgba(192, 57, 43, 0.10); border-color: rgba(192, 57, 43, 0.5); }
+/* Klikalne kafelki podświetlają się na najechanie (warstwa inset — nie psuje tła „dziś"/zaznaczenia) */
+.wdt-cell:hover { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.06); border-color: rgba(212, 175, 55, 0.5); }
+.wdt-actor-cell:hover { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.06); }
+
+/* Tryb planowania: komórki do malowania + zaznaczone */
+.wdt-cell.wdt-paintable { cursor: pointer; }
+.wdt-cell.wdt-selected {
+  outline: 2px solid var(--wdt-gold);
+  outline-offset: -2px;
+  background: rgba(212, 175, 55, 0.16);
+}
+
+/* Pasek skrótów w komórce — 6 ikon, subtelne, wyraźniejsze po najechaniu, zawijają się */
+.wdt-cell-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 3px;
+  opacity: 0.4;
+  transition: opacity 0.12s;
+}
+.wdt-cell:hover .wdt-cell-actions { opacity: 1; }
+.wdt-q {
+  width: 22px; height: 22px; padding: 0; line-height: 1;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--wdt-line);
+  color: var(--wdt-text);
+  font-size: 11px;
+}
+.wdt-q:hover { background: rgba(255, 255, 255, 0.12); }
+.wdt-q-income { color: var(--wdt-gold); border-color: rgba(212, 175, 55, 0.45); }
+.wdt-q-income:hover { background: rgba(212, 175, 55, 0.2); }
+.wdt-q-heal { color: #e08a8a; border-color: rgba(192, 57, 43, 0.4); }
+.wdt-q-rest { color: #8ab6d6; border-color: rgba(120, 160, 200, 0.4); }
+.wdt-q-adv { color: #c9b178; }
+
+/* Karta zajęcia — kompaktowa (szczegóły po rozwinięciu wiersza) */
+.wdt-card {
+  position: relative;
+  border: 1px solid var(--wdt-line);
+  border-radius: 4px;
+  background: rgba(91, 138, 58, 0.18); /* zielonkawe tło wykonanej karty */
+  padding: 3px 5px;
+  font-size: var(--font-size-12, 12px);
+  color: var(--wdt-text);
+}
+.wdt-card-head { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.wdt-card-head > i { font-size: 13px; color: var(--wdt-dim); flex: 0 0 auto; }
+.wdt-card-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wdt-card.wdt-missing .wdt-card-name { color: #e07a6a; }
+.wdt-card-res { font-size: 11px; color: var(--wdt-dim); margin-top: 1px; }
+.wdt-type-income .wdt-card-res { color: var(--wdt-gold); font-weight: 600; }
+.wdt-card-detail { font-size: 10px; color: var(--wdt-dim); margin-top: 2px; }
+
+/* Kolory ikon typu */
+.wdt-type-income .wdt-card-head > i { color: var(--wdt-gold); }
+.wdt-type-healing .wdt-card-head > i { color: #e08a8a; }
+.wdt-type-extended .wdt-card-head > i { color: #b8862b; }
+
+/* „X" kasowania — w rozwiniętym wierszu, prawy górny róg */
+.wdt-card-del {
+  position: absolute; top: 1px; right: 1px;
+  width: 16px; height: 16px; padding: 0; line-height: 1; font-size: 10px;
+  background: rgba(0, 0, 0, 0.4); border: 1px solid var(--wdt-line); border-radius: 3px; color: var(--wdt-dim);
+}
+.wdt-card-del:hover { color: #e07a6a; }
+/* Ołówek edycji notatki — obok „X" (tylko w rozwiniętym wierszu, dla przygody/leczenia) */
+.wdt-card-edit {
+  position: absolute; top: 1px; right: 19px;
+  width: 16px; height: 16px; padding: 0; line-height: 1; font-size: 9px;
+  background: rgba(0, 0, 0, 0.4); border: 1px solid var(--wdt-line); border-radius: 3px; color: var(--wdt-dim);
+}
+.wdt-card-edit:hover { color: var(--wdt-gold); }
+
+/* Pasek SL testu wydłużonego */
+.wdt-sl { margin-top: 4px; }
+.wdt-sl-bar { height: 6px; background: rgba(255, 255, 255, 0.12); border-radius: 3px; overflow: hidden; }
+.wdt-sl-bar > span { display: block; height: 100%; background: var(--wdt-green); }
+.wdt-sl-text { font-size: 10px; color: var(--wdt-dim); }
+
+/* Łączenie = jedna szersza komórka (grid-column span); karta wypełnia całą szerokość. */
+.wdt-cell.wdt-merged .wdt-card { width: 100%; }
+
+/* Chip kosztu utrzymania w komórce (informacyjny, jak odpoczynek) */
+.wdt-cost-chip {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--wdt-gold);
+  background: rgba(212, 175, 55, 0.12);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.wdt-cost-chip > i { color: var(--wdt-gold); }
+.wdt-cost-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Sekcja odpoczynku — wizualnie oddzielona (nie zużywa dnia) */
+.wdt-rest {
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(138, 182, 214, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.wdt-rest-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #cfe1ef;
+  background: rgba(120, 160, 200, 0.12);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.wdt-rest-chip > i { color: #8ab6d6; }
+.wdt-rest-res { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wdt-rest-del {
+  width: 16px; height: 16px; padding: 0; line-height: 1; font-size: 9px; flex: 0 0 auto;
+  background: transparent; border: none; color: var(--wdt-dim);
+}
+.wdt-rest-del:hover { color: #e07a6a; }
+
+.wdt-empty-state {
+  flex: 1 1 auto;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--wdt-dim); font-style: italic; text-align: center;
+}
+
+/* Klik na aktora/kafelek rozwija wiersz */
+.wdt-actor-cell { cursor: pointer; }
+
+/* Status pod postacią (standard życia do kosztu utrzymania) */
+.wdt-actor-status { display: flex; flex-wrap: nowrap; align-items: center; gap: 3px; font-size: 10px; color: var(--wdt-dim); margin-top: 1px; }
+.wdt-status-label { cursor: pointer; text-decoration: underline dotted; white-space: nowrap; }
+.wdt-status-tier { white-space: nowrap; }
+.wdt-status-input { width: 56px; height: 16px; padding: 0 3px; line-height: 1; font-size: 10px; }
+/* Stałe miejsce strzałki+resetu ZA wartością — wiersz nie skacze, gdy się pojawiają/znikają. */
+.wdt-status-adorn { display: inline-flex; align-items: center; gap: 2px; min-width: 30px; flex: 0 0 auto; }
+.wdt-status-arrow { font-size: 8px; }
+.wdt-status-reset {
+  width: 14px; height: 14px; padding: 0; line-height: 1; font-size: 8px; flex: 0 0 auto;
+  background: transparent; border: none; color: var(--wdt-dim); cursor: pointer;
+}
+.wdt-status-reset:hover { color: var(--wdt-text); }
+/* Kontrast zmiany statusu: zieleń mocniejsza, czerwień odrobinę mocniejsza, pogrubione. */
+.wdt-actor-status.wdt-standing-up .wdt-status-input,
+.wdt-actor-status.wdt-standing-up .wdt-status-tier,
+.wdt-actor-status.wdt-standing-up .wdt-status-arrow { color: #7fe06a; font-weight: bold; }
+.wdt-actor-status.wdt-standing-down .wdt-status-input,
+.wdt-actor-status.wdt-standing-down .wdt-status-tier,
+.wdt-actor-status.wdt-standing-down .wdt-status-arrow { color: #ef6a5a; font-weight: bold; }
+
+/* Znaczniki na nagłówku dnia */
+.wdt-day-mod { position: absolute; top: 3px; left: 5px; font-size: 9px; font-weight: bold; color: var(--wdt-gold); }
+.wdt-day-work { position: absolute; bottom: 2px; right: 5px; font-size: 9px; color: #c9b178; }
+.wdt-day-head.wdt-paintable { cursor: pointer; }
+.wdt-day-head.wdt-selected { outline: 2px solid var(--wdt-gold); outline-offset: -2px; }
+
+/* Pasek modyfikatorów (MG) — jak planbar, złoty akcent */
+.wdt-modbar {
+  display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
+  padding: 4px 6px; background: rgba(212, 175, 55, 0.10);
+  border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 6px;
+}
+.wdt-modbar label { font-weight: bold; }
+.wdt-modbar input[type="number"] { width: 56px; text-align: center; }
+.wdt-modbar input[type="text"] { flex: 1 1 auto; min-width: 80px; }
+.wdt-mod-step { width: 26px; padding: 0; font-weight: bold; line-height: 1; }
+
+/* Planbar — dodatki */
+.wdt-plan-cleardays { background: rgba(192, 57, 43, 0.30); border-color: var(--wdt-red-acc); }
+.wdt-plan-cleardays:hover { background: rgba(192, 57, 43, 0.5); }
+.wdt-plan-clear { background: rgba(0, 0, 0, 0.25); border-color: var(--wdt-line); } /* odznacz = neutralny */
+.wdt-planbar .wdt-plan-note { display: flex; align-items: center; gap: 4px; }
+.wdt-planbar .wdt-plan-note input { width: 120px; }
+.wdt-planbar .wdt-plan-week { display: flex; align-items: center; gap: 4px; }
+
+/* Nagłówek grupy (folder aktorów) — pełna szerokość siatki, klik zwija/rozwija */
+.wdt-group-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  margin-top: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--wdt-line);
+  border-left: 3px solid var(--wdt-group-color, var(--wdt-gold));
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+.wdt-group-head:hover { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.06); }
+.wdt-group-head.wdt-collapsed { opacity: 0.75; }
+.wdt-group-chevron { width: 10px; font-size: 10px; color: var(--wdt-dim); }
+.wdt-group-icon { color: var(--wdt-group-color, var(--wdt-gold)); }
+.wdt-group-name { font-weight: bold; color: var(--wdt-text); }
+.wdt-group-count { font-size: 11px; color: var(--wdt-dim); }
+.wdt-group-hidden { margin-left: auto; font-size: 10px; color: var(--wdt-dim); }
+
+/* Portret = otwarcie karty postaci */
+.wdt-actor-img[data-action="openSheet"] { cursor: zoom-in; }
+.wdt-actor-img[data-action="openSheet"]:hover { border-color: var(--wdt-gold); }
+
+/* Oko „schowaj/pokaż na osi" — prawy górny róg komórki postaci, wyraźne na hover */
+.wdt-actor-hide {
+  position: absolute; top: 2px; right: 2px;
+  width: 16px; height: 16px; padding: 0; line-height: 1; font-size: 9px;
+  background: transparent; border: none; color: var(--wdt-dim);
+  opacity: 0; transition: opacity 0.12s;
+}
+.wdt-actor-cell:hover .wdt-actor-hide,
+.wdt-actor-cell.wdt-row-hidden .wdt-actor-hide { opacity: 1; }
+.wdt-actor-hide:hover { color: var(--wdt-text); }
+
+/* Schowana postać (widoczna po „Ukryte (N)") — przyciemniona */
+.wdt-actor-cell.wdt-row-hidden .wdt-actor-img,
+.wdt-actor-cell.wdt-row-hidden .wdt-actor-meta,
+.wdt-cell.wdt-row-hidden { opacity: 0.45; }
+.wdt-all-hidden { padding: 24px 8px; }
+
+/* Wiersz rozwinięty — karty nieco większe, nazwa może się zawinąć */
+.wdt-cell.wdt-expanded .wdt-card { padding: 5px 6px; }
+.wdt-cell.wdt-expanded .wdt-card-name { white-space: normal; }
+
+/* Dialog (zostaje na domyślnym, jasnym tle DialogV2) */
+.wdt-dialog .form-group { margin-bottom: 6px; }
+.wdt-dialog label { display: block; font-weight: bold; margin-bottom: 2px; }
+.wdt-dialog-actor {
+  font-weight: bold; margin-bottom: 8px; padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-border-light-tertiary, #c9c7b8);
+}
+/* Potwierdzenie pobrania kosztu utrzymania (czat) */
+.wdt-cost-paid { color: var(--wdt-gold); }
+.wdt-cost-paid.wdt-cost-failed { color: var(--wdt-red-acc); }
+
+.wdt-income-preview { font-size: var(--font-size-13, 13px); }
+.wdt-income-preview .notes { font-size: var(--font-size-11, 11px); opacity: 0.8; margin: 4px 0 0; }
+.wdt-warn-block { color: #9c2b2b; }

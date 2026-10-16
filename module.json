@@ -1,0 +1,43 @@
+{
+  "id": "wfrp4e-downtime-timeline",
+  "title": "WFRP4e: Oś czasu zajęć (Downtime)",
+  "description": "Oś czasu spięta z Simple Calendar do planowania i rozliczania powtarzalnych czynności postaci (downtime) w Warhammer Fantasy Roleplay 4e: testów, testów wydłużonych i zarobkowania.",
+  "version": "2.5.0",
+  "authors": [{ "name": "Ilinar", "url": "https://github.com/Ilinar" }],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14"
+  },
+  "esmodules": ["scripts/main.js"],
+  "styles": ["styles/timeline.css"],
+  "languages": [
+    {
+      "lang": "pl",
+      "name": "Polski",
+      "path": "lang/pl.json"
+    },
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "relationships": {
+    "requires": [
+      {
+        "id": "wfrp4e",
+        "type": "system"
+      }
+    ],
+    "recommends": [
+      {
+        "id": "foundryvtt-simple-calendar",
+        "type": "module",
+        "reason": "Dostarcza oś czasu (datę, kalendarz, święta). Bez niego moduł działa na rdzeniowym czasie świata."
+      }
+    ]
+  },
+  "url": "https://github.com/Ilinar/wfrp4e-downtime-timeline",
+  "manifest": "https://github.com/Ilinar/wfrp4e-downtime-timeline/releases/latest/download/module.json",
+  "download": "https://github.com/Ilinar/wfrp4e-downtime-timeline/releases/download/v2.5.0/module.zip"
+}

@@ -1,0 +1,73 @@
+<form class="wdt-dialog">
+    <div class="wdt-dialog-actor"><i class="fa-solid fa-user"></i> {{actorName}}</div>
+
+    <div class="form-group">
+        <label>{{localize "WDT.Field.Type"}}</label>
+        <select name="type">
+            {{#each types as |ty|}}
+            <option value="{{ty.value}}" {{#if ty.selected}}selected{{/if}}>{{ty.label}}</option>
+            {{/each}}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>{{localize "WDT.Field.Label"}}</label>
+        <input type="text" name="label" value="{{label}}" placeholder="{{localize 'WDT.Field.LabelPlaceholder'}}" />
+    </div>
+
+    {{! --- TEST: umiejętność lub cecha --- }}
+    <div class="wdt-sec wdt-sec-test" style="{{#unless isTest}}display:none{{/unless}}">
+        <div class="form-group">
+            <label>{{localize "WDT.Field.RollTarget"}}</label>
+            <select name="rollTarget">
+                {{#each rollOptions as |o|}}
+                <option value="{{o.value}}" {{#if o.selected}}selected{{/if}}>{{o.name}}</option>
+                {{/each}}
+            </select>
+        </div>
+    </div>
+
+    {{! --- EXTENDED: istniejący z karty lub nowy --- }}
+    <div class="wdt-sec wdt-sec-extended" style="{{#unless isExtended}}display:none{{/unless}}">
+        <div class="form-group">
+            <label>{{localize "WDT.Extended.Existing"}}</label>
+            <select name="extendedTestId">
+                {{#each extendedItems as |it|}}
+                <option value="{{it.id}}" {{#if it.selected}}selected{{/if}}>{{it.name}} ({{it.sl}} SL)</option>
+                {{/each}}
+                <option value="__new__" {{#unless hasExtended}}selected{{/unless}}>➕ {{localize "WDT.Extended.CreateNew"}}</option>
+            </select>
+        </div>
+        <div class="wdt-new-extended" style="{{#if hasExtended}}display:none{{/if}}">
+            <div class="form-group">
+                <label>{{localize "WDT.Extended.Name"}}</label>
+                <input type="text" name="newName" value="" placeholder="{{localize 'WDT.Extended.NamePlaceholder'}}" />
+            </div>
+            <div class="form-group">
+                <label>{{localize "WDT.Field.RollTarget"}}</label>
+                <select name="newRollTarget">
+                    {{#each rollOptions as |o|}}
+                    <option value="{{o.value}}">{{o.name}}</option>
+                    {{/each}}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>{{localize "WDT.Extended.Target"}}</label>
+                <input type="number" name="newTarget" value="6" min="1" step="1" />
+            </div>
+        </div>
+    </div>
+
+    {{! --- INCOME: podgląd (kariera + umiejętności) --- }}
+    <div class="wdt-sec wdt-sec-income" style="{{#unless isIncome}}display:none{{/unless}}">
+        {{#if incomeOk}}
+        <div class="wdt-income-preview">
+            <div><b>{{localize "WDT.Income.Career"}}:</b> {{careerName}}</div>
+            <div><b>{{localize "WDT.Income.Skills"}}:</b> {{#each incomeSkills as |s|}}{{s}}{{#unless @last}}, {{/unless}}{{/each}}</div>
+            <p class="notes">{{localize "WDT.Income.Hint"}}</p>
+        </div>
+        {{else}}
+        <p class="wdt-warn-block"><i class="fa-solid fa-triangle-exclamation"></i> {{localize "WDT.Income.NoCareerOrSkills"}}</p>
+        {{/if}}
+    </div>
+</form>
