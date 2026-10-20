@@ -13,6 +13,10 @@ https://github.com/Ilinar/wfrp4e-downtime-timeline/releases/latest/download/modu
 
 Nowe wersje pojawiają się potem przy **Sprawdź aktualizacje** na liście modułów.
 
+**Zalecany:** [Simple Calendar Reborn](https://github.com/Fireblight-Studios/foundryvtt-simple-calendar)
+(Fireblight Studios, id `foundryvtt-simple-calendar-reborn`) — daje kalendarz imperialny i tydzień WFRP.
+Bez niego oś działa na rdzeniowym czasie świata.
+
 ## Instrukcja
 
 Pełny opis obsługi: [INSTRUKCJA.md](INSTRUKCJA.md).

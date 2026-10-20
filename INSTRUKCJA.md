@@ -1,7 +1,7 @@
 # WFRP4e: Oś czasu zajęć (Downtime) — instrukcja
 
 **Do czego:** planowanie i rozliczanie czynności postaci między sesjami na siatce
-**postacie × dni tygodnia** (tydzień czytany z Simple Calendar). Rzuty trafiają na czat,
+**postacie × dni tygodnia** (tydzień czytany z [Simple Calendar Reborn](https://github.com/Fireblight-Studios/foundryvtt-simple-calendar)). Rzuty trafiają na czat,
 a moduł automatycznie nalicza **koszt utrzymania**.
 
 ## Otwarcie
