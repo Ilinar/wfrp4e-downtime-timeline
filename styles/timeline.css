@@ -188,6 +188,7 @@
 .wdt-actor-name {
   font-weight: bold; color: var(--wdt-text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-right: 14px; /* wielokropek kończy się przed okiem .wdt-actor-hide */
 }
 
 /* Komórka dnia danej postaci */
@@ -409,16 +410,21 @@
 .wdt-actor-img[data-action="openSheet"] { cursor: zoom-in; }
 .wdt-actor-img[data-action="openSheet"]:hover { border-color: var(--wdt-gold); }
 
-/* Oko „schowaj/pokaż na osi" — prawy górny róg komórki postaci, wyraźne na hover */
+/* Oko „schowaj/pokaż na osi" — prawy górny róg komórki postaci, wyraźne na hover.
+   z-index: opacity schowanego wiersza robi z .wdt-actor-meta warstwę, która inaczej przykrywa przycisk. */
 .wdt-actor-hide {
-  position: absolute; top: 2px; right: 2px;
-  width: 16px; height: 16px; padding: 0; line-height: 1; font-size: 9px;
+  position: absolute; top: 2px; right: 2px; z-index: 2;
+  width: 20px; height: 20px; padding: 0; line-height: 1; font-size: 11px;
   background: transparent; border: none; color: var(--wdt-dim);
   opacity: 0; transition: opacity 0.12s;
 }
 .wdt-actor-cell:hover .wdt-actor-hide,
 .wdt-actor-cell.wdt-row-hidden .wdt-actor-hide { opacity: 1; }
 .wdt-actor-hide:hover { color: var(--wdt-text); }
+/* W schowanym wierszu to jedyna droga powrotu — przycisk ma się rzucać w oczy */
+.wdt-actor-cell.wdt-row-hidden .wdt-actor-hide {
+  background: rgba(0, 0, 0, 0.45); border: 1px solid var(--wdt-gold); border-radius: 3px; color: var(--wdt-gold);
+}
 
 /* Schowana postać (widoczna po „Ukryte (N)") — przyciemniona */
 .wdt-actor-cell.wdt-row-hidden .wdt-actor-img,
